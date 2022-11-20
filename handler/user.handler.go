@@ -1,10 +1,19 @@
 package handler
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"log"
+	"mathsant/web-service-fiber/database"
+	"mathsant/web-service-fiber/model/entity"
 
-func UserHandlerRead(ctx *fiber.Ctx) error {
+	"github.com/gofiber/fiber/v2"
+)
 
-	return ctx.Status(200).JSON(fiber.Map{
-		"user": "Matheus",
-	})
+func UserHandlerGetAll(ctx *fiber.Ctx) error {
+	var users []entity.User
+	err := database.DB.Debug().Find(&users)
+	if err != nil {
+		log.Println(err)
+	}
+
+	return ctx.JSON(users)
 }
