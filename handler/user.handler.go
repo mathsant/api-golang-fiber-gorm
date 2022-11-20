@@ -3,9 +3,11 @@ package handler
 import (
 	"log"
 	"mathsant/web-service-fiber/database"
+	"mathsant/web-service-fiber/handler/helpers"
 	"mathsant/web-service-fiber/model/entity"
 	"mathsant/web-service-fiber/model/request"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -26,6 +28,16 @@ func UserHandlerCreate(ctx *fiber.Ctx) error {
 		return err
 	}
 
+	validate := validator.New()
+
+	errValidator := validate.Struct(user)
+	if errValidator != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"message": "Failed",
+			"error":   errValidator.Error(),
+		})
+	}
+
 	newUser := entity.User{
 		Name:    user.Name,
 		Email:   user.Email,
@@ -44,4 +56,22 @@ func UserHandlerCreate(ctx *fiber.Ctx) error {
 		"message": "Success",
 		"data":    newUser,
 	})
+}
+
+func UserHandleGetById(ctx *fiber.Ctx) error {
+	idUser := ctx.Params("id")
+
+	var user entity.User
+
+	err := database.DB.Debug().First(&user, idUser).Error
+
+	if err != nil {
+		return ctx.JSON(fiber.Map{
+			"message": "User not found!",
+		})
+	}
+
+	userConverted := helpers.MakeUserResponse(&user)
+
+	return ctx.JSON(userConverted)
 }
