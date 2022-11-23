@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"mathsant/web-service-fiber/database"
+	"mathsant/web-service-fiber/handler/helpers"
 	"mathsant/web-service-fiber/model/entity"
 	"mathsant/web-service-fiber/model/request"
 	"mathsant/web-service-fiber/model/response"
@@ -31,6 +32,7 @@ func UserHandlerCreate(ctx *fiber.Ctx) error {
 	validate := validator.New()
 
 	errValidator := validate.Struct(user)
+
 	if errValidator != nil {
 		return ctx.Status(400).JSON(fiber.Map{
 			"message": "Failed",
@@ -63,9 +65,9 @@ func UserHandleGetById(ctx *fiber.Ctx) error {
 
 	var user entity.User
 
-	err := database.DB.Debug().First(&user, idUser).Error
+	userFound := helpers.FindOneUser(user, idUser)
 
-	if err != nil {
+	if !userFound {
 		return ctx.Status(404).JSON(fiber.Map{
 			"message": "User not found!",
 		})
@@ -132,9 +134,9 @@ func UserHandlerDelete(ctx *fiber.Ctx) error {
 
 	var user entity.User
 
-	err := database.DB.Debug().First(&user, idUser).Error
+	userFound := helpers.FindOneUser(user, idUser)
 
-	if err != nil {
+	if !userFound {
 		return ctx.Status(404).JSON(fiber.Map{
 			"message": "User not found!",
 		})
