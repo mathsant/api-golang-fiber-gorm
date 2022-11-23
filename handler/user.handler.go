@@ -3,9 +3,9 @@ package handler
 import (
 	"log"
 	"mathsant/web-service-fiber/database"
-	"mathsant/web-service-fiber/handler/helpers"
 	"mathsant/web-service-fiber/model/entity"
 	"mathsant/web-service-fiber/model/request"
+	"mathsant/web-service-fiber/model/response"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
@@ -66,12 +66,63 @@ func UserHandleGetById(ctx *fiber.Ctx) error {
 	err := database.DB.Debug().First(&user, idUser).Error
 
 	if err != nil {
-		return ctx.JSON(fiber.Map{
+		return ctx.Status(404).JSON(fiber.Map{
 			"message": "User not found!",
 		})
 	}
 
-	userConverted := helpers.MakeUserResponse(&user)
+	userConverted := response.UserResponse{
+		ID:        user.ID,
+		Name:      user.Name,
+		Email:     user.Email,
+		Address:   user.Address,
+		Phone:     user.Phone,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
+	}
 
 	return ctx.JSON(userConverted)
+}
+
+func UserHandlerUpdate(ctx *fiber.Ctx) error {
+	userRequest := new(request.UserUpdateRequest)
+
+	if err := ctx.BodyParser(userRequest); err != nil {
+		return ctx.Status(400).JSON(fiber.Map{
+			"message": "Invalid data",
+		})
+	}
+
+	var user entity.User
+
+	userId := ctx.Params("id")
+	err := database.DB.First(&user, userId).Error
+	if err != nil {
+		return ctx.Status(404).JSON(fiber.Map{
+			"message": "User not found",
+		})
+	}
+
+	if userRequest.Name != "" {
+		user.Name = userRequest.Name
+	}
+	if userRequest.Phone != "" {
+		user.Phone = userRequest.Phone
+	}
+	if userRequest.Address != "" {
+		user.Address = userRequest.Address
+	}
+
+	errUpdate := database.DB.Save(&user).Error
+
+	if errUpdate != nil {
+		return ctx.Status(500).JSON(fiber.Map{
+			"message": "Internal save error for update",
+		})
+	}
+
+	return ctx.JSON(fiber.Map{
+		"message": "success",
+		"data":    user,
+	})
 }
