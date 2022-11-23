@@ -98,10 +98,12 @@ func UserHandlerUpdate(ctx *fiber.Ctx) error {
 	var user entity.User
 
 	userId := ctx.Params("id")
-	err := database.DB.First(&user, userId).Error
-	if err != nil {
+
+	userFound := helpers.FindOneUser(user, userId)
+
+	if !userFound {
 		return ctx.Status(404).JSON(fiber.Map{
-			"message": "User not found",
+			"message": "User not found!",
 		})
 	}
 
