@@ -1,15 +1,15 @@
 package handler
 
 import (
+	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
 	"log"
 	"mathsant/web-service-fiber/database"
 	"mathsant/web-service-fiber/handler/helpers"
 	"mathsant/web-service-fiber/model/entity"
 	"mathsant/web-service-fiber/model/request"
 	"mathsant/web-service-fiber/model/response"
-
-	"github.com/go-playground/validator/v10"
-	"github.com/gofiber/fiber/v2"
+	"mathsant/web-service-fiber/utils"
 )
 
 func UserHandlerGetAll(ctx *fiber.Ctx) error {
@@ -46,6 +46,16 @@ func UserHandlerCreate(ctx *fiber.Ctx) error {
 		Phone:   user.Phone,
 		Address: user.Address,
 	}
+
+	hashedPassword, err := utils.HashingPassword(user.Password)
+	if err != nil {
+		log.Println(err)
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "internal server error",
+		})
+	}
+
+	newUser.Password = hashedPassword
 
 	errCreateUser := database.DB.Create(&newUser).Error
 	if errCreateUser != nil {

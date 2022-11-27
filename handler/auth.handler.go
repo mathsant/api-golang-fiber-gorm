@@ -6,6 +6,7 @@ import (
 	"mathsant/web-service-fiber/database"
 	"mathsant/web-service-fiber/model/entity"
 	"mathsant/web-service-fiber/model/request"
+	"mathsant/web-service-fiber/utils"
 )
 
 func LoginHandler(ctx *fiber.Ctx) error {
@@ -28,6 +29,13 @@ func LoginHandler(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.Status(404).JSON(fiber.Map{
 			"message": "User not found",
+		})
+	}
+
+	isValid := utils.CheckPasswordHash(loginRequest.Password, user.Password)
+	if !isValid {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Wrong Credentials",
 		})
 	}
 
