@@ -12,6 +12,8 @@ import (
 	"time"
 )
 
+const userAdminEmail = "matheus@hotmail.com"
+
 func LoginHandler(ctx *fiber.Ctx) error {
 	loginRequest := new(request.LoginRequest)
 
@@ -47,6 +49,12 @@ func LoginHandler(ctx *fiber.Ctx) error {
 	claims["email"] = user.Email
 	claims["address"] = user.Address
 	claims["exp"] = time.Now().Add(time.Minute * 2).Unix()
+
+	if user.Email == userAdminEmail {
+		claims["role"] = "admin"
+	} else {
+		claims["role"] = "user"
+	}
 
 	token, errGenerateToken := utils.GenerateToken(&claims)
 	if errGenerateToken != nil {
